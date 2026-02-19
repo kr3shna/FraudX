@@ -5,8 +5,8 @@ Execution order:
   1. Build graph (NetworkX DiGraph with node attributes)
   2. Run all three detection algorithms in sequence
   3. Merge algorithm results into combined flag map + cluster list
-  4. Apply suppression rules (payroll + merchant false-positive filters)
-  5. Compute suspicion scores for all flagged accounts
+  4. Apply proportional suppression (payroll + merchant false-positive filters)
+  5. Compute continuous suspicion scores for all flagged accounts
   6. Merge clusters into named rings via Union-Find
   7. Build and return the ForensicResult
 """
@@ -64,37 +64,49 @@ def run_pipeline(
     logger.info("Graph: %d nodes, %d edges", G.number_of_nodes(), G.number_of_edges())
 
     # ── Step 2: Run detection algorithms ─────────────────────────────────
+    algo_results = []
     combined_flags: dict[str, list[str]] = {}
     all_clusters: list[set[str]] = []
 
     for AlgoClass in _ALGORITHM_CLASSES:
         algo = AlgoClass(settings)
-        algo_result = algo.run(G, df)
+        r = algo.run(G, df)
+        algo_results.append(r)
 
-        for acc, patterns in algo_result.account_flags.items():
+        for acc, patterns in r.account_flags.items():
             combined_flags.setdefault(acc, []).extend(patterns)
-        all_clusters.extend(algo_result.clusters)
+        all_clusters.extend(r.clusters)
 
         logger.info(
             "%s: %d accounts flagged, %d clusters",
             AlgoClass.__name__,
-            len(algo_result.account_flags),
-            len(algo_result.clusters),
+            len(r.account_flags),
+            len(r.clusters),
         )
 
-    # ── Step 3: Apply suppression ─────────────────────────────────────────
-    suppressed_flags = apply_suppression(combined_flags, G, df, settings)
-    total_suppressed = sum(len(v) for v in suppressed_flags.values())
-    logger.info("Suppression: %d flags removed", total_suppressed)
+    cycle_result, smurf_result, shell_result = algo_results
 
-    # ── Step 4: Score all accounts ────────────────────────────────────────
-    scores = compute_scores(combined_flags, suppressed_flags, G, settings)
-    n_above_threshold = sum(
-        1 for s in scores.values() if s >= settings.suspicious_score_threshold
+    # ── Step 3: Apply proportional suppression ────────────────────────────
+    suppressed_flags, suppression_multipliers = apply_suppression(
+        combined_flags, G, df, settings
     )
     logger.info(
+        "Suppression: %d accounts with reduced scores, %d flags hidden from display",
+        len(suppression_multipliers),
+        sum(len(v) for v in suppressed_flags.values()),
+    )
+
+    # ── Step 4: Compute continuous scores ─────────────────────────────────
+    scores = compute_scores(
+        cycle_result.account_scores,
+        smurf_result.account_scores,
+        shell_result.account_scores,
+        suppression_multipliers,
+    )
+    n_above = sum(1 for s in scores.values() if s >= settings.suspicious_score_threshold)
+    logger.info(
         "Scoring: %d accounts above threshold (%.1f)",
-        n_above_threshold,
+        n_above,
         settings.suspicious_score_threshold,
     )
 

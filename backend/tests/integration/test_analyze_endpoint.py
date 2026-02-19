@@ -95,16 +95,17 @@ def test_detected_patterns_sorted_alphabetically(client, mixed_csv_bytes):
 
 # ── Mixed patterns score ──────────────────────────────────────────────────────
 
-def test_mixed_patterns_acc_a_score_65(client, mixed_csv_bytes):
+def test_mixed_patterns_acc_a_higher_score(client, mixed_csv_bytes):
+    """ACC_A has both cycle + smurfing, so it scores higher than ACC_B/C (cycle only)."""
     body = client.post(
         "/api/analyze", files={"file": ("m.csv", mixed_csv_bytes, "text/csv")}
     ).json()
-    acc_a = next(
-        a for a in body["result"]["suspicious_accounts"] if a["account_id"] == "ACC_A"
-    )
-    assert acc_a["suspicion_score"] == 65.0
-    assert "cycle_length_3" in acc_a["detected_patterns"]
-    assert "smurfing_fan_in" in acc_a["detected_patterns"]
+    accounts = {a["account_id"]: a for a in body["result"]["suspicious_accounts"]}
+    assert "ACC_A" in accounts
+    assert "cycle_length_3" in accounts["ACC_A"]["detected_patterns"]
+    assert "smurfing_fan_in" in accounts["ACC_A"]["detected_patterns"]
+    # Multi-pattern account must outscore single-pattern accounts
+    assert accounts["ACC_A"]["suspicion_score"] > accounts["ACC_B"]["suspicion_score"]
 
 
 # ── Suppression ───────────────────────────────────────────────────────────────

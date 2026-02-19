@@ -1,89 +1,55 @@
 """
-Categorical scoring engine.
+Continuous scoring engine.
 
-Category table (max possible = 85):
+Combines per-category scores produced by each algorithm into a final suspicion score.
 
-  Cycle    (max 40): cycle_length_3=40, cycle_length_4=32, cycle_length_5=25
-  Smurfing (max 25): smurfing_fan_in=25, smurfing_fan_out=22
-  Shell    (max 20): shell_intermediary=20, shell_source=15
+Category maxima (unchanged from v1):
+  Cycle    max 40  — computed by CycleDetectionAlgorithm
+  Smurfing max 25  — computed by SmurfingAlgorithm
+  Shell    max 20  — computed by ShellChainAlgorithm
+  Total    max 85
 
 Rules:
-  - Within each category:  take the HIGHEST single pattern score.
-  - Across categories:     sum the three category scores.
-  - Only accounts with total score > suspicious_score_threshold (40.0) are
-    returned in the final output, but this function scores ALL accounts.
+  - Each algorithm stores its best (highest) continuous score per account in
+    AlgorithmResult.account_scores.
+  - Suppression multipliers (0–1) are applied to the smurfing score only.
+  - Final score = cycle_score + (smurfing_score × multiplier) + shell_score.
+  - Threshold to appear in output: suspicious_score_threshold (default 15.0).
+
+Score reference (approximate, depends on data):
+  Strong cycle alone    → 25–38
+  Strong smurfing alone → 15–23
+  Strong shell alone    → 10–17
+  Cycle + smurfing      → 40–60
+  All three categories  → 55–80
 """
-
-import networkx as nx
-
-from app.config import Settings
-
-# ── Pattern → point value ─────────────────────────────────────────────────
-_PATTERN_SCORES: dict[str, int] = {
-    # Cycle
-    "cycle_length_3": 40,
-    "cycle_length_4": 32,
-    "cycle_length_5": 25,
-    # Smurfing
-    "smurfing_fan_in": 25,
-    "smurfing_fan_out": 22,
-    # Shell
-    "shell_intermediary": 20,
-    "shell_source": 15,
-}
-
-# ── Pattern → category ────────────────────────────────────────────────────
-_CYCLE_PATTERNS = {"cycle_length_3", "cycle_length_4", "cycle_length_5"}
-_SMURFING_PATTERNS = {"smurfing_fan_in", "smurfing_fan_out"}
-_SHELL_PATTERNS = {"shell_intermediary", "shell_source"}
 
 
 def compute_scores(
-    combined_flags: dict[str, list[str]],
-    suppressed_flags: dict[str, list[str]],
-    G: nx.DiGraph,
-    settings: Settings,
+    cycle_scores: dict[str, float],
+    smurfing_scores: dict[str, float],
+    shell_scores: dict[str, float],
+    suppression_multipliers: dict[str, float],
 ) -> dict[str, float]:
     """
-    Compute a suspicion score for every flagged account.
+    Combine per-category algorithm scores into final suspicion scores.
 
     Args:
-        combined_flags:  raw flags from all algorithms (before suppression).
-        suppressed_flags: flags to remove (from suppression layer).
-        G:               the transaction graph (not used for scoring, kept for API consistency).
-        settings:        configuration (threshold used by callers, not here).
+        cycle_scores:             account_id → cycle category score (0–40)
+        smurfing_scores:          account_id → smurfing category score (0–25)
+        shell_scores:             account_id → shell category score (0–20)
+        suppression_multipliers:  account_id → multiplier applied to smurfing score (0–1)
 
     Returns:
-        dict mapping account_id → suspicion_score (float, 0–100).
-        Accounts with zero effective flags score 0 and are excluded from output
-        by the output builder.
+        dict mapping account_id → suspicion_score (float, 0–85).
     """
+    all_accounts = set(cycle_scores) | set(smurfing_scores) | set(shell_scores)
     scores: dict[str, float] = {}
 
-    for account, raw_patterns in combined_flags.items():
-        removed = set(suppressed_flags.get(account, []))
-        effective = [p for p in raw_patterns if p not in removed]
-
-        score = _score_patterns(effective)
-        scores[account] = score
+    for acc in all_accounts:
+        c  = cycle_scores.get(acc, 0.0)
+        s  = smurfing_scores.get(acc, 0.0) * suppression_multipliers.get(acc, 1.0)
+        sh = shell_scores.get(acc, 0.0)
+        scores[acc] = round(c + s + sh, 1)
 
     return scores
-
-
-def _score_patterns(patterns: list[str]) -> float:
-    if not patterns:
-        return 0.0
-
-    pattern_set = set(patterns)
-
-    cycle_score = max(
-        (_PATTERN_SCORES[p] for p in pattern_set & _CYCLE_PATTERNS), default=0
-    )
-    smurfing_score = max(
-        (_PATTERN_SCORES[p] for p in pattern_set & _SMURFING_PATTERNS), default=0
-    )
-    shell_score = max(
-        (_PATTERN_SCORES[p] for p in pattern_set & _SHELL_PATTERNS), default=0
-    )
-
-    return float(cycle_score + smurfing_score + shell_score)
