@@ -22,31 +22,38 @@ def build_graph(df: pd.DataFrame) -> nx.DiGraph:
     Multi-edges (multiple rows between the same sender/receiver) are collapsed
     into a single weighted edge. Per-account transaction counts are stored as
     node attributes for use by shell-chain and suppression algorithms.
+
+    Fully vectorised — no Python-level loops over rows or groups.
     """
     G: nx.DiGraph = nx.DiGraph()
 
-    # ── Compute per-account totals from the DataFrame ──────────────────────
-    sender_counts = df["sender_id"].value_counts()
+    # ── Node attributes (vectorised) ──────────────────────────────────────
+    sender_counts   = df["sender_id"].value_counts()
     receiver_counts = df["receiver_id"].value_counts()
-    all_accounts: set[str] = set(df["sender_id"]) | set(df["receiver_id"])
+    all_accounts    = sender_counts.index.union(receiver_counts.index)
 
-    for acc in all_accounts:
-        out_cnt = int(sender_counts.get(acc, 0))
-        in_cnt = int(receiver_counts.get(acc, 0))
-        G.add_node(
-            acc,
-            total_transactions=out_cnt + in_cnt,
-            out_degree_count=out_cnt,
-            in_degree_count=in_cnt,
-        )
+    out_cnt = sender_counts.reindex(all_accounts, fill_value=0)
+    in_cnt  = receiver_counts.reindex(all_accounts, fill_value=0)
 
-    # ── Add collapsed edges with aggregate attributes ──────────────────────
-    for (sender, receiver), group in df.groupby(["sender_id", "receiver_id"]):
-        G.add_edge(
-            sender,
-            receiver,
-            weight=float(group["amount"].sum()),
-            count=len(group),
-        )
+    G.add_nodes_from(
+        (acc, {
+            "total_transactions": int(out_cnt[acc] + in_cnt[acc]),
+            "out_degree_count":   int(out_cnt[acc]),
+            "in_degree_count":    int(in_cnt[acc]),
+        })
+        for acc in all_accounts
+    )
+
+    # ── Edge attributes (vectorised groupby + bulk add) ───────────────────
+    edge_df = (
+        df.groupby(["sender_id", "receiver_id"], sort=False)["amount"]
+        .agg(weight="sum", count="count")
+        .reset_index()
+    )
+
+    G.add_edges_from(
+        (row.sender_id, row.receiver_id, {"weight": float(row.weight), "count": int(row.count)})
+        for row in edge_df.itertuples(index=False)
+    )
 
     return G
