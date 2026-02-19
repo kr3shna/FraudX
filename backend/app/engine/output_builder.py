@@ -45,7 +45,7 @@ def build_output(
     # ── Build suspicious_accounts ──────────────────────────────────────────
     suspicious_accounts: list[SuspiciousAccount] = []
     for acc, score in scores.items():
-        if score <= threshold:
+        if score < threshold:
             continue
 
         removed = set(suppressed_flags.get(acc, []))

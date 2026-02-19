@@ -90,7 +90,7 @@ def run_pipeline(
     # ── Step 4: Score all accounts ────────────────────────────────────────
     scores = compute_scores(combined_flags, suppressed_flags, G, settings)
     n_above_threshold = sum(
-        1 for s in scores.values() if s > settings.suspicious_score_threshold
+        1 for s in scores.values() if s >= settings.suspicious_score_threshold
     )
     logger.info(
         "Scoring: %d accounts above threshold (%.1f)",

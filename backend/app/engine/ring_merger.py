@@ -83,7 +83,7 @@ def merge_rings(
     threshold = settings.suspicious_score_threshold
 
     # Step 1: suspicious accounts only
-    suspicious = {acc for acc, s in scores.items() if s > threshold}
+    suspicious = {acc for acc, s in scores.items() if s >= threshold}
     if not suspicious:
         return []
 
