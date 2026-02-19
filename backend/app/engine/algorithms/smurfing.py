@@ -68,7 +68,7 @@ class SmurfingAlgorithm(BaseAlgorithm):
 
             for i in range(len(timestamps)):
                 window_end = timestamps[i] + window
-                mask = timestamps <= window_end
+                mask = (timestamps >= timestamps[i]) & (timestamps <= window_end)
                 unique_senders = set(senders[mask])
                 if len(unique_senders) >= min_degree:
                     self._add_flag(result, receiver, "smurfing_fan_in")
@@ -101,7 +101,7 @@ class SmurfingAlgorithm(BaseAlgorithm):
 
             for i in range(len(timestamps)):
                 window_end = timestamps[i] + window
-                mask = timestamps <= window_end
+                mask = (timestamps >= timestamps[i]) & (timestamps <= window_end)
                 unique_receivers = set(receivers[mask])
                 if len(unique_receivers) >= min_degree:
                     self._add_flag(result, sender, "smurfing_fan_out")
