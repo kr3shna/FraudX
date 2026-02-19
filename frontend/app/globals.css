@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --background: #020202;
+  --foreground: #FFFFFF;
+  --accent: #00926B;
+  --font-geist-sans: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-geist-mono: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-playfair: "Times New Roman", Times, Georgia, serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-playfair);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animated wave - moves left to right */
+/* @keyframes wave-ltr {
+  0% { transform: translateX(-30%); }
+  100% { transform: translateX(10%); }
+} */
+
+/* .animate-wave-ltr {
+  animation: wave-ltr 12s ease-in-out infinite;
+}
+
+.animate-wave-ltr-slow {
+  animation: wave-ltr 18s ease-in-out infinite;
+} */
+
+/* Background image - subtle left to right drift */
+/* @keyframes wave-bg {
+  0% { transform: translateX(-5%) scale(1.05); }
+  100% { transform: translateX(5%) scale(1.05); }
+} */
+
+/* .animate-wave-bg {
+  animation: wave-bg 20s ease-in-out infinite;
+  width: 110%;
+  height: 100%;
+  left: -5%;
+} */
+
+/* Corner circle: slight blur + slow circular rotation */
+@keyframes circle-rotate {
+  from { transform: translateY(50%) rotate(0deg); }
+  to { transform: translateY(50%) rotate(360deg); }
+}
+
+.corner-circle-blur-rotate {
+  filter: blur(1.5px);
+  animation: circle-rotate 12s linear infinite;
+}
