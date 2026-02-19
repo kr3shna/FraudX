@@ -1,0 +1,4 @@
+transaction_id,sender_id,receiver_id,amount,timestamp
+T001,ACC_A,ACC_B,5000.00,2024-01-01 10:00:00
+T002,ACC_B,ACC_C,4800.00,2024-01-01 11:00:00
+T003,ACC_C,ACC_A,4600.00,2024-01-01 12:00:00
