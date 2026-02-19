@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # ── Server ────────────────────────────────────────────────────────────────
     frontend_url: str = "http://localhost:3000"
-    max_upload_size_mb: int = 50
+    max_upload_size_mb: int = 5
 
     # ── Result Store ──────────────────────────────────────────────────────────
     result_store_ttl_seconds: int = 3600

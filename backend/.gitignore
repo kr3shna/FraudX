@@ -32,5 +32,9 @@ build/
 *.swp
 *.swo
 
+# Log files
+ffe.log
+ffe.log.*
+
 # macOS
 .DS_Store

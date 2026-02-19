@@ -1,13 +1,20 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
+
+from app.store.memory_store import MemoryStore, get_store
 
 router = APIRouter()
 
 
 @router.get("/health", tags=["health"])
-async def health_check() -> dict[str, str]:
+async def health_check(store: MemoryStore = Depends(get_store)) -> JSONResponse:
     """
-    Liveness probe endpoint.
-    Used by EC2 load balancer health checks and uptime monitors.
-    Returns 200 as long as the process is alive.
+    Readiness probe endpoint.
+    Verifies the process is alive AND the result store is operational.
+    Returns 200 (healthy) or 503 (unhealthy) for load balancer health checks.
     """
-    return {"status": "ok"}
+    try:
+        store.get("__health__")   # lightweight read — touches eviction logic
+        return JSONResponse(status_code=200, content={"status": "ok"})
+    except Exception:
+        return JSONResponse(status_code=503, content={"status": "unhealthy"})

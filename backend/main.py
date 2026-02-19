@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -17,7 +18,14 @@ def configure_logging() -> None:
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s %(message)s",
-        handlers=[logging.StreamHandler()],
+        handlers=[
+            logging.StreamHandler(),
+            logging.handlers.RotatingFileHandler(
+                "ffe.log",
+                maxBytes=10_000_000,   # 10 MB per file
+                backupCount=3,          # keep ffe.log, ffe.log.1, ffe.log.2, ffe.log.3
+            ),
+        ],
     )
 
 
