@@ -146,8 +146,4 @@ def _merchant_multiplier(account: str, G: nx.DiGraph, settings: Settings) -> flo
     if in_deg >= int(min_in * 0.6) and out_deg <= 3:
         return 0.5
 
-    # Some merchant characteristics
-    if in_deg >= int(min_in * 0.3):
-        return 0.8
-
     return 1.0

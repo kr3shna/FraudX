@@ -35,9 +35,9 @@ class Settings(BaseSettings):
 
     # ── Scoring ───────────────────────────────────────────────────────────────
     # Accounts with a final score below this threshold are excluded from output.
-    # With continuous scoring (max 85), 15.0 allows strong smurfing/shell-only
-    # accounts to appear in results without requiring a cycle.
-    suspicious_score_threshold: float = 15.0
+    # With continuous scoring (max 85), 12.0 allows accounts that trigger
+    # a detection algorithm to appear even when at the minimum signal strength.
+    suspicious_score_threshold: float = 12.0
 
     model_config = SettingsConfigDict(
         env_file=".env",
