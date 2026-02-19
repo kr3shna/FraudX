@@ -68,7 +68,7 @@ async def analyze(
     )
 
     # ── 6. Persist result & return ────────────────────────────────────────
-    session_token = uuid.uuid4().hex[:12]
+    session_token = uuid.uuid4().hex  # 32-char hex = 128-bit entropy
     store.set(session_token, result)
 
     return AnalyzeResponse(

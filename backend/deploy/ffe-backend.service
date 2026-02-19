@@ -1,0 +1,18 @@
+[Unit]
+Description=Financial Forensics Engine Backend
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/rift/backend
+EnvironmentFile=/home/ubuntu/rift/backend/.env
+# --workers 1 is intentional: in-memory store and rate limiter are per-process.
+# Multiple workers would give each request a different memory space.
+ExecStart=/home/ubuntu/rift/backend/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
