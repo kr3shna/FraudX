@@ -20,6 +20,7 @@ from app.config import Settings
 from app.engine.algorithms.cycle_detection import CycleDetectionAlgorithm
 from app.engine.algorithms.shell_chain import ShellChainAlgorithm
 from app.engine.algorithms.smurfing import SmurfingAlgorithm
+from app.engine.algorithms.velocity import VelocityAlgorithm
 from app.engine.graph_builder import build_graph
 from app.engine.output_builder import build_output
 from app.engine.ring_merger import merge_rings
@@ -29,10 +30,14 @@ from app.models.response import ForensicResult
 
 logger = logging.getLogger(__name__)
 
-_ALGORITHM_CLASSES = [
+# Algorithms that contribute clusters to ring detection (cycle + shell only).
+# Smurfing and velocity do NOT form rings.
+_RING_ALGORITHM_CLASSES = [CycleDetectionAlgorithm, ShellChainAlgorithm]
+_ALL_ALGORITHM_CLASSES = [
     CycleDetectionAlgorithm,
     SmurfingAlgorithm,
     ShellChainAlgorithm,
+    VelocityAlgorithm,
 ]
 
 
@@ -66,16 +71,19 @@ def run_pipeline(
     # ── Step 2: Run detection algorithms ─────────────────────────────────
     algo_results = []
     combined_flags: dict[str, list[str]] = {}
-    all_clusters: list[set[str]] = []
+    ring_clusters: list[set[str]] = []   # only cycle + shell contribute to rings
 
-    for AlgoClass in _ALGORITHM_CLASSES:
+    for AlgoClass in _ALL_ALGORITHM_CLASSES:
         algo = AlgoClass(settings)
         r = algo.run(G, df)
         algo_results.append(r)
 
         for acc, patterns in r.account_flags.items():
             combined_flags.setdefault(acc, []).extend(patterns)
-        all_clusters.extend(r.clusters)
+
+        # Only cycle and shell structural clusters are used for ring formation.
+        if AlgoClass in _RING_ALGORITHM_CLASSES:
+            ring_clusters.extend(r.clusters)
 
         logger.info(
             "%s: %d accounts flagged, %d clusters",
@@ -84,7 +92,7 @@ def run_pipeline(
             len(r.clusters),
         )
 
-    cycle_result, smurf_result, shell_result = algo_results
+    cycle_result, smurf_result, shell_result, velocity_result = algo_results
 
     # ── Step 3: Apply proportional suppression ────────────────────────────
     suppressed_flags, suppression_multipliers = apply_suppression(
@@ -102,6 +110,7 @@ def run_pipeline(
         smurf_result.account_scores,
         shell_result.account_scores,
         suppression_multipliers,
+        velocity_result.account_scores,
     )
     n_above = sum(1 for s in scores.values() if s >= settings.suspicious_score_threshold)
     logger.info(
@@ -110,8 +119,8 @@ def run_pipeline(
         settings.suspicious_score_threshold,
     )
 
-    # ── Step 5: Merge rings ───────────────────────────────────────────────
-    rings = merge_rings(all_clusters, scores, combined_flags, suppressed_flags, settings)
+    # ── Step 5: Merge rings (cycle + shell clusters only) ─────────────────
+    rings = merge_rings(ring_clusters, scores, combined_flags, suppressed_flags, settings)
     logger.info("Rings: %d identified", len(rings))
 
     # ── Step 6: Build output ──────────────────────────────────────────────

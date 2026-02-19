@@ -149,12 +149,16 @@ def merge_rings(
 # ── Helpers ────────────────────────────────────────────────────────────────
 
 
+_VELOCITY_PATTERNS = {"burst_activity", "high_velocity", "velocity_spike", "dormancy_break"}
+
+
 def _classify_pattern_type(patterns: set[str]) -> str:
     has_cycle = any(p.startswith("cycle_") for p in patterns)
     has_smurfing = any(p.startswith("smurfing_") for p in patterns)
     has_shell = any(p.startswith("shell_") for p in patterns)
+    has_velocity = bool(patterns & _VELOCITY_PATTERNS)
 
-    active = sum([has_cycle, has_smurfing, has_shell])
+    active = sum([has_cycle, has_smurfing, has_shell, has_velocity])
     if active > 1:
         return "mixed"
     if has_cycle:
@@ -163,6 +167,8 @@ def _classify_pattern_type(patterns: set[str]) -> str:
         return "smurfing"
     if has_shell:
         return "shell"
+    if has_velocity:
+        return "velocity"
     return "unknown"
 
 

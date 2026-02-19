@@ -178,3 +178,8 @@ def fan_in_csv_bytes() -> bytes:
 @pytest.fixture
 def mixed_csv_bytes() -> bytes:
     return (FIXTURES_DIR / "mixed_patterns.csv").read_bytes()
+
+
+@pytest.fixture
+def velocity_burst_csv_bytes() -> bytes:
+    return (FIXTURES_DIR / "velocity_burst.csv").read_bytes()
