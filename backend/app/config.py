@@ -25,17 +25,6 @@ class Settings(BaseSettings):
     shell_max_total_transactions: int = 3
     shell_chain_min_hops: int = 3
 
-    # ── Algorithm: Velocity ───────────────────────────────────────────────────
-    burst_window_hours: int = 1
-    burst_min_transactions: int = 5
-    daily_velocity_window_hours: int = 24
-    daily_velocity_min_transactions: int = 15
-    velocity_spike_ratio: float = 3.0
-    velocity_spike_window_days: int = 7
-    dormancy_min_days: int = 30
-    dormancy_activity_window_hours: int = 48
-    dormancy_activity_threshold: int = 5
-
     # ── Suppression ───────────────────────────────────────────────────────────
     # Payroll: flag fan-out accounts whose outgoing transactions are highly regular.
     # CV = std / mean. Low CV ⟹ very consistent ⟹ payroll / automated disbursement.
