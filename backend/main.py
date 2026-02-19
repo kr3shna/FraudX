@@ -4,10 +4,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 from app.api.health import router as health_router
 from app.api.router import api_router
 from app.config import settings
+from app.middleware.rate_limiter import limiter
 from app.middleware.request_id import RequestIDMiddleware
 
 
@@ -34,6 +36,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Attach limiter to app state — required by slowapi
+app.state.limiter = limiter
+
 # ── Middleware ─────────────────────────────────────────────────────────────────
 # Note: FastAPI applies middleware in reverse registration order.
 # RequestIDMiddleware is registered last so it runs first (outermost layer).
@@ -45,6 +50,19 @@ app.add_middleware(
     expose_headers=["X-Request-ID"],
 )
 app.add_middleware(RequestIDMiddleware)
+
+# ── Rate limit handler ────────────────────────────────────────────────────────
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    req_id = getattr(request.state, "request_id", "unknown")
+    return JSONResponse(
+        status_code=429,
+        content={
+            "detail": f"Rate limit exceeded: {exc.detail}",
+            "request_id": req_id,
+        },
+    )
+
 
 # ── Global exception handler ──────────────────────────────────────────────────
 # Catches any unhandled exception. Never leaks stack traces to the client.

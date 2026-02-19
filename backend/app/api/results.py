@@ -2,8 +2,9 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 
+from app.middleware.rate_limiter import limiter
 from app.models.response import ForensicResult, ForensicSummary
 from app.store.memory_store import MemoryStore, get_store
 
@@ -12,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/results", response_model=ForensicResult)
+@limiter.limit("60/minute")
 async def get_results(
+    request: Request,
     x_session_token: str = Header(alias="X-Session-Token"),
     account_id: str | None = Query(default=None, description="Filter to a single account"),
     ring_id: str | None = Query(default=None, description="Filter to a specific ring"),

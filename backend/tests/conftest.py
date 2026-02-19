@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.engine.graph_builder import build_graph
+from app.middleware.rate_limiter import limiter
 from app.store.memory_store import reset_store
 from main import app
 
@@ -25,8 +26,9 @@ def settings() -> Settings:
 
 @pytest.fixture
 def client():
-    """TestClient with a fresh MemoryStore for every test."""
+    """TestClient with a fresh MemoryStore and reset rate-limit counters per test."""
     reset_store()
+    limiter._storage.reset()
     with TestClient(app) as c:
         yield c
     reset_store()

@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from app.config import Settings, settings
 from app.engine.parser import parse_csv
 from app.engine.pipeline import run_pipeline
+from app.middleware.rate_limiter import limiter
 from app.models.response import AnalyzeResponse
 from app.store.memory_store import MemoryStore, get_store
 
@@ -19,6 +20,7 @@ _MAX_ROWS = 15_000
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
+@limiter.limit("10/minute")
 async def analyze(
     request: Request,
     file: UploadFile = File(...),
