@@ -16,7 +16,7 @@ Returns a list of RingInfo named-tuples consumed by output_builder.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from app.config import Settings
 
@@ -153,12 +153,8 @@ def _classify_pattern_type(patterns: set[str]) -> str:
     has_cycle = any(p.startswith("cycle_") for p in patterns)
     has_smurfing = any(p.startswith("smurfing_") for p in patterns)
     has_shell = any(p.startswith("shell_") for p in patterns)
-    has_velocity = any(
-        p in {"burst_activity", "dormancy_break", "high_velocity", "velocity_spike"}
-        for p in patterns
-    )
 
-    active = sum([has_cycle, has_smurfing, has_shell, has_velocity])
+    active = sum([has_cycle, has_smurfing, has_shell])
     if active > 1:
         return "mixed"
     if has_cycle:
@@ -167,7 +163,7 @@ def _classify_pattern_type(patterns: set[str]) -> str:
         return "smurfing"
     if has_shell:
         return "shell"
-    return "velocity"
+    return "unknown"
 
 
 def _compute_ring_risk(
@@ -185,11 +181,6 @@ def _compute_ring_risk(
     if any(p.startswith("smurfing_") for p in ring_patterns):
         distinct_types += 1
     if any(p.startswith("shell_") for p in ring_patterns):
-        distinct_types += 1
-    if any(
-        p in {"burst_activity", "dormancy_break", "high_velocity", "velocity_spike"}
-        for p in ring_patterns
-    ):
         distinct_types += 1
 
     pattern_bonus = min(15.0, (distinct_types - 1) * 5.0)

@@ -3,7 +3,7 @@ Pipeline orchestrator — single entry point for the full detection pipeline.
 
 Execution order:
   1. Build graph (NetworkX DiGraph with node attributes)
-  2. Run all four detection algorithms in sequence
+  2. Run all three detection algorithms in sequence
   3. Merge algorithm results into combined flag map + cluster list
   4. Apply suppression rules (payroll + merchant false-positive filters)
   5. Compute suspicion scores for all flagged accounts
@@ -20,7 +20,6 @@ from app.config import Settings
 from app.engine.algorithms.cycle_detection import CycleDetectionAlgorithm
 from app.engine.algorithms.shell_chain import ShellChainAlgorithm
 from app.engine.algorithms.smurfing import SmurfingAlgorithm
-from app.engine.algorithms.velocity import VelocityAlgorithm
 from app.engine.graph_builder import build_graph
 from app.engine.output_builder import build_output
 from app.engine.ring_merger import merge_rings
@@ -34,7 +33,6 @@ _ALGORITHM_CLASSES = [
     CycleDetectionAlgorithm,
     SmurfingAlgorithm,
     ShellChainAlgorithm,
-    VelocityAlgorithm,
 ]
 
 
