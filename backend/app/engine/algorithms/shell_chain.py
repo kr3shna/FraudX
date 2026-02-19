@@ -20,7 +20,6 @@ Clusters:
 
 import logging
 from collections import deque
-
 import networkx as nx
 import pandas as pd
 
@@ -31,94 +30,108 @@ logger = logging.getLogger(__name__)
 
 
 class ShellChainAlgorithm(BaseAlgorithm):
+
     def run(self, G: nx.DiGraph, df: pd.DataFrame) -> AlgorithmResult:
         result = AlgorithmResult()
 
         max_txns = self.settings.shell_max_total_transactions
         min_hops = self.settings.shell_chain_min_hops
+        MAX_CHAINS = 10_000
+        MAX_DEPTH = 10
 
-        # Classify each node
+        # ── Node classification (safe) ───────────────────────────
         is_shell: dict[str, bool] = {
-            acc: G.nodes[acc]["total_transactions"] <= max_txns
-            for acc in G.nodes()
+            node: G.nodes[node].get("total_transactions", 0) <= max_txns
+            for node in G.nodes()
         }
 
-        non_shell = [acc for acc, shell in is_shell.items() if not shell]
+        non_shell_nodes = [n for n, shell in is_shell.items() if not shell]
 
-        found_chains: list[list[str]] = []
+        seen_paths: set[tuple[str, ...]] = set()
 
-        for source in non_shell:
-            chains = self._bfs_chains(G, source, is_shell, min_hops)
-            found_chains.extend(chains)
+        # ── BFS from each non-shell source ───────────────────────
+        for source in non_shell_nodes:
 
-        # Deduplicate by frozen path
-        seen: set[tuple[str, ...]] = set()
-        for chain in found_chains:
-            key = tuple(chain)
-            if key in seen:
-                continue
-            seen.add(key)
+            if len(seen_paths) >= MAX_CHAINS:
+                logger.warning("Shell chain cap %d reached. Stopping.", MAX_CHAINS)
+                break
 
-            # Flag nodes
-            source_node = chain[0]
-            dest_node = chain[-1]
-            intermediaries = chain[1:-1]
-
-            self._add_flag(result, source_node, "shell_source")
-            self._add_flag(result, dest_node, "shell_source")
-            for node in intermediaries:
-                self._add_flag(result, node, "shell_intermediary")
-
-            result.clusters.append(set(chain))
-            logger.debug("Shell chain detected: %s", " → ".join(chain))
+            self._bfs_from_source(
+                G=G,
+                source=source,
+                is_shell=is_shell,
+                min_hops=min_hops,
+                max_depth=MAX_DEPTH,
+                max_chains=MAX_CHAINS,
+                seen_paths=seen_paths,
+                result=result,
+            )
 
         logger.info(
             "ShellChain: %d chains found, %d accounts flagged",
-            len(seen),
+            len(seen_paths),
             len(result.account_flags),
         )
+
         return result
 
-    def _bfs_chains(
+    # ─────────────────────────────────────────────────────────────
+    # BFS traversal from a single source
+    # ─────────────────────────────────────────────────────────────
+    def _bfs_from_source(
         self,
         G: nx.DiGraph,
         source: str,
         is_shell: dict[str, bool],
         min_hops: int,
-    ) -> list[list[str]]:
-        """
-        BFS from source through shell intermediaries.
-        Returns all paths that end at a non-shell destination with ≥ min_hops edges.
-        """
-        chains: list[list[str]] = []
-        # queue: (current_node, path_so_far)
-        queue: deque[tuple[str, list[str]]] = deque()
-        queue.append((source, [source]))
+        max_depth: int,
+        max_chains: int,
+        seen_paths: set[tuple[str, ...]],
+        result: AlgorithmResult,
+    ):
+        # queue entries: (current_node, path_tuple, visited_set)
+        queue: deque = deque()
+        queue.append((source, (source,), {source}))
 
         while queue:
-            current, path = queue.popleft()
-            depth = len(path) - 1  # number of edges so far
+            current, path, visited = queue.popleft()
+            depth = len(path) - 1
 
-            if depth > 10:  # safety cap to prevent runaway paths
+            if depth >= max_depth:
                 continue
 
             for neighbor in G.successors(current):
-                if neighbor in path:  # no revisiting
+
+                if neighbor in visited:
                     continue
 
-                new_path = path + [neighbor]
+                new_path = path + (neighbor,)
+                new_visited = visited | {neighbor}
                 new_depth = depth + 1
 
-                if is_shell[neighbor]:
-                    # Continue exploring through shell
-                    queue.append((neighbor, new_path))
-                else:
-                    # Non-shell destination found
-                    if new_depth >= min_hops:
-                        # All intermediate nodes must be shells
-                        intermediaries = new_path[1:-1]
-                        if all(is_shell[n] for n in intermediaries):
-                            chains.append(new_path)
-                    # Do not continue past a non-shell destination
+                if is_shell.get(neighbor, False):
+                    # Continue through shell intermediary
+                    queue.append((neighbor, new_path, new_visited))
 
-        return chains
+                else:
+                    # Found non-shell destination
+                    if new_depth >= min_hops:
+
+                        # Ensure all intermediates are shells
+                        intermediates = new_path[1:-1]
+                        if all(is_shell.get(n, False) for n in intermediates):
+
+                            if new_path not in seen_paths:
+                                seen_paths.add(new_path)
+
+                                # Flag endpoints
+                                self._add_flag(result, new_path[0], "shell_source")
+                                self._add_flag(result, new_path[-1], "shell_source")
+
+                                # Flag intermediaries
+                                for node in intermediates:
+                                    self._add_flag(result, node, "shell_intermediary")
+
+                                result.clusters.append(frozenset(new_path))
+
+                    # Never continue past non-shell
