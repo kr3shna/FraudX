@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #020202;
+  --foreground: #FFFFFF;
+  --accent: #00926B;
+  --font-subheading-fallback: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading-fallback: Georgia, "Times New Roman", serif;
+  --font-geist-mono: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-subheading), var(--font-subheading-fallback);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-heading), var(--font-heading-fallback);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-subheading), var(--font-subheading-fallback);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-weight: 800;
+}
+
+/* Animated wave - moves left to right */
+/* @keyframes wave-ltr {
+  0% { transform: translateX(-30%); }
+  100% { transform: translateX(10%); }
+} */
+
+/* .animate-wave-ltr {
+  animation: wave-ltr 12s ease-in-out infinite;
+}
+
+.animate-wave-ltr-slow {
+  animation: wave-ltr 18s ease-in-out infinite;
+} */
+
+/* Background image - subtle left to right drift */
+/* @keyframes wave-bg {
+  0% { transform: translateX(-5%) scale(1.05); }
+  100% { transform: translateX(5%) scale(1.05); }
+} */
+
+/* .animate-wave-bg {
+  animation: wave-bg 20s ease-in-out infinite;
+  width: 110%;
+  height: 100%;
+  left: -5%;
+} */
+
+/* Corner circle: slight blur + slow circular rotation */
+@keyframes circle-rotate {
+  from { transform: translateY(50%) rotate(0deg); }
+  to { transform: translateY(50%) rotate(360deg); }
+}
+
+.corner-circle-blur-rotate {
+  filter: blur(1.5px);
+  animation: circle-rotate 12s linear infinite;
+}
