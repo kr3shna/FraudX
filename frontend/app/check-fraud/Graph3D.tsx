@@ -103,26 +103,29 @@ export function Graph3D({
     return { nodes, links };
   }, [visibleNodes, visibleEdges, selectedId]);
 
-  const nodeColor = (node: GraphNode & { fillColor?: string }) =>
-    node.fillColor ?? SCORE_COLOR_MAP[node.color] ?? '#22c55e';
+  const nodeColor = (node: unknown) => {
+    const n = node as GraphNode & { fillColor?: string };
+    return n.fillColor ?? SCORE_COLOR_MAP[n.color] ?? '#22c55e';
+  };
 
-  const nodeVal = (node: GraphNode) => {
-    if (node.score == null) return 2;
-    const t = (node.score - minScore) / scoreRange;
+  const nodeVal = (node: unknown) => {
+    const n = node as GraphNode;
+    if (n.score == null) return 2;
+    const t = (n.score - minScore) / scoreRange;
     return 2 + t * 4;
   };
 
-  const linkColor = (link: { connectedToSelected?: boolean }) =>
-    link.connectedToSelected ? '#00e87b' : 'rgba(255,255,255,0.35)';
+  const linkColor = (link: unknown) =>
+    (link as { connectedToSelected?: boolean }).connectedToSelected ? '#00e87b' : 'rgba(255,255,255,0.35)';
 
-  const linkWidth = (link: { connectedToSelected?: boolean }) =>
-    link.connectedToSelected ? 1.5 : 0.8;
+  const linkWidth = (link: unknown) =>
+    (link as { connectedToSelected?: boolean }).connectedToSelected ? 1.5 : 0.8;
 
-  const linkDirectionalParticles = (link: { connectedToSelected?: boolean }) =>
-    link.connectedToSelected ? 8 : 2;
+  const linkDirectionalParticles = (link: unknown) =>
+    (link as { connectedToSelected?: boolean }).connectedToSelected ? 8 : 2;
 
-  const linkDirectionalParticleWidth = (link: { connectedToSelected?: boolean }) =>
-    link.connectedToSelected ? 0.8 : 0.5;
+  const linkDirectionalParticleWidth = (link: unknown) =>
+    (link as { connectedToSelected?: boolean }).connectedToSelected ? 0.8 : 0.5;
 
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden rounded-xl">
@@ -144,9 +147,7 @@ export function Graph3D({
         linkDirectionalParticles={linkDirectionalParticles}
         linkDirectionalParticleWidth={linkDirectionalParticleWidth}
         linkDirectionalParticleSpeed={0.02}
-        linkDirectionalParticleColor={(link) =>
-          (link as { connectedToSelected?: boolean }).connectedToSelected ? '#00e87b' : 'rgba(255,255,255,0.5)'
-        }
+        linkDirectionalParticleColor={linkColor}
         backgroundColor="#0a0d12"
         onNodeClick={(node, ev) => {
           const n = node as GraphNode;

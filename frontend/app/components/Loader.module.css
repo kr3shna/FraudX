@@ -1,13 +1,10 @@
-:root {
+.loaderRoot {
   --loader-green: #00e87b;
   --loader-green-dim: #00b85e;
   --loader-border: rgba(0, 232, 123, 0.15);
   --loader-dark: #050a07;
   --loader-text: #c8ffd9;
   --loader-text-dim: rgba(200, 255, 217, 0.45);
-}
-
-.loaderRoot {
   width: 100%;
   min-height: 100vh;
   font-family: var(--font-subheading, 'Bricolage Grotesque', sans-serif);
