@@ -1,6 +1,6 @@
 # FraudX
 
-**FraudX** is a full-stack fraud and money-mule detection platform. Upload transaction CSV data, run forensic analysis on the backend, and explore suspicious accounts and fraud rings in an interactive graph (2D Sigma.js or 3D) on the frontend.
+**FraudX** is a full-stack fraud and money-mule detection platform. Upload transaction CSV data, run forensic analysis on the backend, and explore suspicious accounts and fraud rings in an interactive graph (2D Sigma.js or 3D) on the frontend .
 
 ---
 
