@@ -21,8 +21,7 @@
 | **Live app** | https://fraudx.online |
 | **API docs (Swagger)** | `http://localhost:8000/docs` (when backend is running) |
 
-To add a video: replace the placeholder above with a link, e.g. `https://www.youtube.com/watch?v=...` or `https://www.loom.com/share/...`.
-
+T
 ---
 
 ## Tech stack
