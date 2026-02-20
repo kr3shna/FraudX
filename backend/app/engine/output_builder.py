@@ -9,6 +9,7 @@ Ordering guarantees (strictly enforced here):
 """
 
 import networkx as nx
+import pandas as pd
 
 from app.config import Settings
 from app.engine.ring_merger import RingInfo
@@ -16,6 +17,9 @@ from app.models.response import (
     ForensicResult,
     ForensicSummary,
     FraudRing,
+    GraphData,
+    GraphEdge,
+    GraphNode,
     SuspiciousAccount,
 )
 
@@ -26,6 +30,7 @@ def build_output(
     suppressed_flags: dict[str, list[str]],
     rings: list[RingInfo],
     G: nx.DiGraph,
+    df: pd.DataFrame,
     elapsed_seconds: float,
     settings: Settings,
 ) -> ForensicResult:
@@ -80,15 +85,51 @@ def build_output(
 
     # ── Build summary ──────────────────────────────────────────────────────
     total_accounts = G.number_of_nodes()
+    total_rows = len(df)
+    total_amount = float(df["amount"].sum()) if "amount" in df.columns and len(df) > 0 else 0.0
     summary = ForensicSummary(
         total_accounts_analyzed=total_accounts,
         suspicious_accounts_flagged=len(suspicious_accounts),
         fraud_rings_detected=len(fraud_rings),
         processing_time_seconds=round(elapsed_seconds, 4),
+        total_rows=total_rows,
+        total_amount=round(total_amount, 2),
     )
+
+    # ── Build directed graph for visualization ──────────────────────────────
+    suspicious_ids = {a.account_id for a in suspicious_accounts}
+    graph_nodes: list[GraphNode] = []
+    graph_edges: list[GraphEdge] = []
+
+    for acc in suspicious_ids:
+        if not G.has_node(acc):
+            continue
+        nd = G.nodes[acc]
+        graph_nodes.append(
+            GraphNode(
+                id=acc,
+                in_degree=nd.get("in_degree_count", G.in_degree(acc)),
+                out_degree=nd.get("out_degree_count", G.out_degree(acc)),
+                total_transactions=nd.get("total_transactions", 0),
+            )
+        )
+
+    for u, v, edata in G.edges(data=True):
+        if u in suspicious_ids and v in suspicious_ids:
+            graph_edges.append(
+                GraphEdge(
+                    source=u,
+                    target=v,
+                    weight=float(edata.get("weight", 0)),
+                    count=int(edata.get("count", 1)),
+                )
+            )
+
+    graph = GraphData(nodes=graph_nodes, edges=graph_edges)
 
     return ForensicResult(
         suspicious_accounts=suspicious_accounts,
         fraud_rings=fraud_rings,
         summary=summary,
+        graph=graph,
     )

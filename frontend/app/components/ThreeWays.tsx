@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { Skull } from 'lucide-react';
 
 const CycleIcon = () => (
@@ -64,7 +65,7 @@ function PatternCard({ icon, category, title, description, visual, algorithm }: 
       </div>
 
       {/* Description */}
-      <div className="text-[13px] text-white/45 leading-relaxed">
+      <div className="text-[13px] text-white/45 leading-relaxed font-sans">
         {description}
       </div>
     </div>
@@ -103,22 +104,15 @@ export default function ThreeWays() {
   return (
     <div className="min-h-screen bg-#020202 text-white font-serif relative overflow-hidden">
 
-      {/* Skull blob — bottom right */}
+      {/* Bottom-right 3D circle image */}
       <div className="absolute right-[-40px] bottom-0 w-[520px] h-[580px] z-0 opacity-90 pointer-events-none">
-        <div
-          className="w-full h-full rounded-[50%_50%_45%_45%] scale-x-[0.85]"
-          style={{
-            background: `radial-gradient(ellipse 60% 55% at 48% 38%, #00ff44 0%, #00cc33 15%, #006622 35%, transparent 65%),
-                         radial-gradient(ellipse 40% 30% at 52% 62%, #00aa33 0%, transparent 60%),
-                         radial-gradient(ellipse 30% 20% at 70% 48%, #00ddaa 0%, transparent 50%)`,
-            filter: "blur(18px)",
-          }}
-        />
-        <div className="absolute top-[30%] left-[28%] w-[44%] h-[32%] rounded-full blur-[8px]"
-          style={{ background: "radial-gradient(ellipse at center, #000 30%, transparent 80%)" }}
-        />
-        <div className="absolute bottom-[8%] left-[20%] w-[60%] h-[28%] blur-[14px]"
-          style={{ background: "radial-gradient(ellipse at 50% 20%, rgba(100,140,120,0.25) 0%, transparent 70%)" }}
+        <Image
+          src="/3D Circle 1.png"
+          alt=""
+          fill
+          className="object-contain object-bottom"
+          sizes="(max-width: 768px) 45vw, 520px"
+          priority={false}
         />
       </div>
 
@@ -187,7 +181,7 @@ export default function ThreeWays() {
             </div>
 
             {/* Description */}
-            <div className="text-[13px] text-white/45 leading-relaxed">
+            <div className="text-[13px] text-white/45 leading-relaxed font-sans">
               {rightPattern.description}
             </div>
 

@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { analyzeCsv } from '@/app/client/api';
 
 const columns = ['transaction_id', 'sender_id', 'receiver_id', 'amount', 'timestamp'];
 
@@ -31,9 +33,20 @@ const CSVIcon = () => (
 );
 
 export default function CSVUpload() {
+  const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -46,16 +59,40 @@ export default function CSVUpload() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) setFileName(file.name);
+    setError(null);
+    const f = e.dataTransfer.files?.[0];
+    if (f?.name.toLowerCase().endsWith('.csv')) setFile(f);
+    else if (f) setError('Please upload a .csv file');
   };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setFileName(file.name);
+    setError(null);
+    const f = e.target.files?.[0];
+    if (f) setFile(f);
+  };
+
+  const handleAnalyze = async () => {
+    if (!file) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await analyzeCsv(file);
+      if (!mountedRef.current) return;
+      router.push(`/check-fraud?session=${encodeURIComponent(res.session_token)}`);
+    } catch (err) {
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : 'Analysis failed');
+      }
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
+    }
   };
 
   return (
-    <section style={{
+    <section
+      id="upload-csv"
+      style={{
       background: '#020202',
       minHeight: '100vh',
       display: 'flex',
@@ -63,7 +100,7 @@ export default function CSVUpload() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '60px 24px',
-      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+      fontFamily: "var(--font-subheading), 'Segoe UI', sans-serif",
       color: '#fff',
     }}>
 
@@ -90,7 +127,7 @@ export default function CSVUpload() {
           fontWeight: '800',
           lineHeight: '1.12',
           letterSpacing: '-2px',
-          fontFamily: "'Georgia', 'Times New Roman', serif",
+          fontFamily: "var(--font-heading), Georgia, serif",
         }}>
           Drop Your CSV.<br />
           Expose <span style={{ color: '#00926B' }}>The Ring.</span>
@@ -176,30 +213,55 @@ export default function CSVUpload() {
           onChange={handleFileChange}
         />
 
-        {/* Choose File button */}
-        <button
-          onClick={() => inputRef.current?.click()}
-          style={{
-            background: '#00926B',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '13px 36px',
-            fontSize: '15px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '32px',
-            transition: 'background 0.18s',
-            letterSpacing: '-0.2px',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#007a55')}
-          onMouseLeave={e => (e.currentTarget.style.background = '#00926B')}
-        >
-          {fileName ? `✓ ${fileName}` : 'Choose File'} →
-        </button>
+        {error && (
+          <p style={{ color: '#ef4444', fontSize: '14px', marginBottom: '12px', textAlign: 'center' }}>
+            {error}
+          </p>
+        )}
+
+        {/* Choose File / Analyze buttons */}
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            style={{
+              background: 'transparent',
+              color: '#00926B',
+              border: '2px solid #00926B',
+              borderRadius: '10px',
+              padding: '13px 28px',
+              fontSize: '15px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.18s',
+            }}
+          >
+            {file ? `✓ ${file.name}` : 'Choose File'} →
+          </button>
+          <button
+            type="button"
+            onClick={handleAnalyze}
+            disabled={!file || loading}
+            style={{
+              background: file && !loading ? '#00926B' : 'rgba(255,255,255,0.2)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '13px 36px',
+              fontSize: '15px',
+              fontWeight: '700',
+              cursor: file && !loading ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'background 0.18s',
+            }}
+            onMouseEnter={e => file && !loading && (e.currentTarget.style.background = '#007a55')}
+            onMouseLeave={e => file && !loading && (e.currentTarget.style.background = '#00926B')}
+          >
+            {loading ? 'Analyzing…' : 'Analyze'}
+          </button>
+        </div>
 
         {/* Column tags */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>

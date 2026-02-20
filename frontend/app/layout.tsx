@@ -1,5 +1,18 @@
 import type { Metadata } from "next";
+import { Abhaya_Libre, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
+
+const abhayaLibre = Abhaya_Libre({
+  subsets: ["latin"],
+  weight: ["800"],
+  variable: "--font-heading",
+});
+
+const bricolageGrotesque = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-subheading",
+});
 
 export const metadata: Metadata = {
   title: "GraphTrail - Expose Money Mule Networks",
@@ -14,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className={`${abhayaLibre.variable} ${bricolageGrotesque.variable} antialiased`}>{children}</body>
     </html>
   );
 }

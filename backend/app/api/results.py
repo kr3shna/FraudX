@@ -60,8 +60,10 @@ async def get_results(
 
     # ── 4. Return filtered result with original summary ───────────────────
     # Summary always reflects the full unfiltered analysis, not the filtered view.
+    # Graph is passed through for frontend visualization.
     return ForensicResult(
         suspicious_accounts=accounts,
         fraud_rings=rings,
         summary=result.summary,
+        graph=getattr(result, "graph", None),
     )

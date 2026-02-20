@@ -216,7 +216,7 @@ function ScoreGauge({ score }: { score: number }) {
           fontWeight: '800',
           color: '#ffffff',
           lineHeight: 1,
-          fontFamily: "'Georgia', serif",
+          fontFamily: "var(--font-heading), Georgia, serif",
         }}>{score}</span>
         <span style={{
           fontSize: '11px',
@@ -238,7 +238,7 @@ function ScoreBar({
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.75)', fontWeight: '500' }}>{label}</span>
-        <span style={{ fontSize: '18px', fontWeight: '800', color: value > 0 ? textColor : '#f97316', fontFamily: "'Georgia', serif" }}>
+        <span style={{ fontSize: '18px', fontWeight: '800', color: value > 0 ? textColor : '#f97316', fontFamily: "var(--font-heading), Georgia, serif" }}>
           {value}
         </span>
       </div>
@@ -303,7 +303,7 @@ export default function SuspicionScore() {
       color: '#fff',
       padding: '72px 40px',
       minHeight: '100vh',
-      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+      fontFamily: "var(--font-subheading), 'Segoe UI', sans-serif",
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -335,7 +335,7 @@ export default function SuspicionScore() {
                 fontWeight: '800',
                 lineHeight: '1.1',
                 letterSpacing: '-1.5px',
-                fontFamily: "'Georgia', 'Times New Roman', serif",
+                fontFamily: "var(--font-heading), Georgia, serif",
               }}>
                 See How Suspicion<br />
                 Score <span style={{ color: '#00926B' }}>Works</span>

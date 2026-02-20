@@ -32,7 +32,7 @@ export default function Hero() {
         </h1>
 
         {/* Description */}
-        <p className="text-base md:text-lg text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-base md:text-lg text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed font-sans">
           A graph-based forensics engine that uncovers illicit fund flows through
           multi-hop account networks — detecting cycles, smurfing, and layered
           shells that traditional systems miss entirely.
@@ -40,9 +40,12 @@ export default function Hero() {
 
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="bg-[#00926B] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#007a55] transition-colors">
+          <a
+            href="#upload-csv"
+            className="bg-[#00926B] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#007a55] transition-colors inline-flex items-center justify-center"
+          >
             Upload CSV
-          </button>
+          </a>
           <a
             href="#pipeline"
             className="text-white/80 hover:text-white transition-colors font-medium flex items-center gap-1.5"

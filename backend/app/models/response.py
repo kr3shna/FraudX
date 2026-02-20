@@ -1,6 +1,31 @@
 from pydantic import BaseModel, Field
 
 
+class GraphNode(BaseModel):
+    """Node in the directed transaction graph (for visualization)."""
+
+    id: str
+    in_degree: int = 0
+    out_degree: int = 0
+    total_transactions: int = 0
+
+
+class GraphEdge(BaseModel):
+    """Directed edge in the transaction graph (source -> target)."""
+
+    source: str
+    target: str
+    weight: float = 0.0
+    count: int = 1
+
+
+class GraphData(BaseModel):
+    """Directed graph structure for frontend visualization."""
+
+    nodes: list[GraphNode]
+    edges: list[GraphEdge]
+
+
 class SuspiciousAccount(BaseModel):
     """A single account flagged as suspicious, with its score and detected patterns."""
 
@@ -31,6 +56,8 @@ class ForensicSummary(BaseModel):
     suspicious_accounts_flagged: int
     fraud_rings_detected: int
     processing_time_seconds: float
+    total_rows: int = 0
+    total_amount: float = 0.0
 
 
 class ForensicResult(BaseModel):
@@ -47,9 +74,9 @@ class ForensicResult(BaseModel):
 
     suspicious_accounts: list[SuspiciousAccount]
     fraud_rings: list[FraudRing]
-    # Key is "summary" (the problem spec has a typo "sry" — one-line fix in output_builder
-    # if judges test literal string matching).
     summary: ForensicSummary
+    # Directed graph for frontend visualization (subgraph of suspicious + connected accounts)
+    graph: GraphData | None = None
 
 
 class ValidationSummary(BaseModel):

@@ -152,7 +152,7 @@ export default function ForensicResults() {
       background: '#020202',
       color: '#fff',
       padding: '64px 40px 80px',
-      fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+      fontFamily: "var(--font-subheading), 'Segoe UI', sans-serif",
       position: 'relative',
       overflow: 'hidden',
       minHeight: '100vh',
@@ -182,7 +182,7 @@ export default function ForensicResults() {
             fontWeight: '800',
             lineHeight: '1.1',
             letterSpacing: '-2px',
-            fontFamily: "'Georgia', 'Times New Roman', serif",
+            fontFamily: "var(--font-heading), Georgia, serif",
           }}>
             Forensic-Grade<br />
             <span style={{ color: '#00926B' }}>Results</span>

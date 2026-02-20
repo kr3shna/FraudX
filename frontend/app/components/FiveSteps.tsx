@@ -148,7 +148,7 @@ function StepCard({ icon, iconBg, badge, description }: Omit<Step, "id">) {
             color: "rgba(255,255,255,0.88)",
             marginBottom: "14px",
             letterSpacing: "0.1px",
-            fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+            fontFamily: "var(--font-subheading), 'Segoe UI', sans-serif",
           }}
         >
           {badge}
@@ -161,7 +161,7 @@ function StepCard({ icon, iconBg, badge, description }: Omit<Step, "id">) {
             fontSize: "13.5px",
             color: "rgba(255,255,255,0.52)",
             lineHeight: "1.72",
-            fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+            fontFamily: "var(--font-subheading), 'Segoe UI', sans-serif",
           }}
         >
           {description}
@@ -254,7 +254,7 @@ export default function FollowTheMoney() {
               fontWeight: "800",
               lineHeight: "1.1",
               letterSpacing: "-2.5px",
-              fontFamily: "'Georgia', 'Times New Roman', serif",
+              fontFamily: "var(--font-heading), Georgia, serif",
             }}
           >
             Follow The Money

@@ -126,7 +126,7 @@ def run_pipeline(
     # ── Step 6: Build output ──────────────────────────────────────────────
     elapsed = time.perf_counter() - start
     result = build_output(
-        scores, combined_flags, suppressed_flags, rings, G, elapsed, settings
+        scores, combined_flags, suppressed_flags, rings, G, df, elapsed, settings
     )
 
     logger.info("Pipeline complete in %.3fs", elapsed)
