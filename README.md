@@ -17,8 +17,6 @@
 
 | Resource | URL |
 |----------|-----|
-| **Video demo** | _Add your video URL here (e.g. YouTube, Loom)_ |
-| **Live app** | https://fraudx.online |
 | **API docs (Swagger)** | `http://localhost:8000/docs` (when backend is running) |
 
 T
